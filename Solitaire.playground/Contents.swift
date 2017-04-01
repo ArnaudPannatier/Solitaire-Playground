@@ -226,25 +226,23 @@ func createField(){
         }
 }
 
-/*
-
-func joue_coup(d1,dir){
-        var couleur1 = d1.elem;
-        var couleur2 = d1.dotAjd[dir].dotAjd[dir].elem;
-        d1.stat = 0;
-        d1.dotAjd[dir].stat = 0;
-        d1.dotAjd[dir].dotAjd[dir].stat = 1;
+func joue_coup(d1: Dot, dir: String){
+        let couleur1 = d1.view;
+        let couleur2 = d1.dotAjd[dir]!.dotAjd[dir]!.view;
+        d1.stat = false;
+        d1.dotAjd[dir]!.stat = false;
+        d1.dotAjd[dir]!.dotAjd[dir]!.stat = true;
+    
+        dotPlay = [];
+        colorise();
         
-        dotPlay = new Array();
-        Solitaire.colorise();
-        
-        couleur1.style.backgroundColor = ColorField["Green"];
-        couleur2.style.backgroundColor = ColorField["Red"];
+        couleur1.backgroundColor = ColorField["red"];
+        couleur2.backgroundColor = ColorField["green"];
         
 }
- */
+ 
 func colorise(){
-        //actionZero();
+        actionZero();
         var compt = 0;
         
     for i in 0..<numberOfCase {
@@ -262,24 +260,25 @@ func colorise(){
         }
     }
 
-/*
-    playArray : function(arr){
+
+func playArray(arr: [Double]) -> Int{
         var k = 0;
-        Solitaire.remiseAZero();
-        Solitaire.actionZero();
-        Solitaire.colorise();
+        remiseAZero();
+        actionZero();
+        colorise();
         
-        while(!Solitaire.is_blocked()){
-            var i = Math.floor(arr[2*k]*dotPlay.length);
-            var j = Math.floor(arr[2*k+1]*dotPlay[i].action.length);
+        while(!is_blocked()){
+            let i = Int(floor(arr[2*k]))*dotPlay.count;
+            let j = Int(floor(arr[2*k+1]))*dotPlay[i].action.count;
             
-            Solitaire.joue_coup(dotPlay[i], dotPlay[i].action[j]);
-            k++;
+            joue_coup(d1: dotPlay[i], dir: dotPlay[i].action[j]);
+            k += 1;
             
         }
         
         return k;
-    },
+}
+/*
     playSlowArray : function(arr){
         k=0, temp=0;
         Solitaire.remiseAZero();
@@ -309,85 +308,33 @@ func colorise(){
         })();
         
     },	
-    
-    is_blocked : function(){
-        if(dotPlay.length == 0 || completementBloque){
+     */
+func is_blocked()->Bool{
+        if(dotPlay.isEmpty || completementBloque){
             return true;
         }
         else {
             return false;
         }
-    },
-    round_o : function(d){
-        if(d.dotAjd.up != nil){
-            if(d.dotAjd.up.stat == 1)
-            return false;
-            
-            if(d.dotAjd.up.dotAjd.left != nil && d.dotAjd.up.dotAjd.left.stat == 1)
-            return false;
-            if(d.dotAjd.up.dotAjd.right != nil && d.dotAjd.up.dotAjd.right.stat == 1)
-            return false;
-            
-        }
-        if(d.dotAjd.left != nil){
-            if(d.dotAjd.left.stat == 1)
-            return false;
-            
-            if(d.dotAjd.left.dotAjd.down != nil && d.dotAjd.left.dotAjd.down.stat == 1)
-            return false;
-            
-        }
-        if(d.dotAjd.right != nil){
-            if(d.dotAjd.right.stat == 1)
-            return false;
-            
-            if(d.dotAjd.right.dotAjd.down != nil && d.dotAjd.right.dotAjd.down.stat == 1)
-            return false;
-            
-        }
-        if(d.dotAjd.down != nil && d.dotAjd.down.stat ==1){
-            return false;
-        }
-        return true;
-    },
-    
-    is_winning : function(){
-        if(Solitaire.is_blocked()){
-            stat = 0;
-            for(i=0; i<33; i++){
-                if(mapDot[i].stat == 1){
-                    stat++;
-                    
-                }
-                
-            }
-            
-            return stat;
-        }
-        return 1000;
-        
-    },
-    remiseAZero : function(){
+}
+ func remiseAZero(){
         completementBloque = false;
-        for(i=0; i<33; i++){
+        for i in 0..<numberOfCase {
             if(i != 10){
-                mapDot[i].stat = 1;
+                mapDot[i].stat = true;
                 
             }else{
-                mapDot[i].stat = 0;
+                mapDot[i].stat = false;
             }
         }
-    },
-    actionZero : function(){
+}
+func actionZero() {
         dotPlay = [];
-        for(i=0; i<33; i++){
-            mapDot[i].action = new Array();
-            
+        for i in 0..<numberOfCase {
+            mapDot[i].action = [];
+        
         }
-    },
-    
-};
-*/
+}
 func to_play(dot: Dot) -> Bool {
     var play = false;
     let dir = ["up", "left", "right", "down"];
