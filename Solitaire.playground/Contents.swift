@@ -3,7 +3,9 @@
 import UIKit
 import PlaygroundSupport
 import Darwin
+import Foundation
 
+PlaygroundPage.current.needsIndefiniteExecution = true
 
 
 var ColorField = [
@@ -278,37 +280,6 @@ func playArray(arr: [Double]) -> Int{
         
         return k;
 }
-/*
-    playSlowArray : function(arr){
-        k=0, temp=0;
-        Solitaire.remiseAZero();
-        Solitaire.actionZero();
-        Solitaire.colorise();
-        
-        (function delay(){
-        
-        
-        setTimeout(function(){
-        
-        if(Solitaire.is_blocked()){
-        return;
-        }
-        
-        var i = Math.floor(arr[2*k]*dotPlay.length);
-        var j = Math.floor(arr[2*k+1]*dotPlay[i].action.length);
-        
-        Solitaire.joue_coup(dotPlay[i], dotPlay[i].action[j]);
-        k++;
-        delay();
-        
-        
-        }, temp);
-        
-        
-        })();
-        
-    },	
-     */
 func is_blocked()->Bool{
         if(dotPlay.isEmpty || completementBloque){
             return true;
@@ -381,11 +352,184 @@ func test_exist(t : Dot, dir: String) -> Bool {
     return false;
 }
 
+let popSize = 90
+var bestFit = ["value" : 0, "index" : 0]
+var leastFit = 0
+let mutationRate = 0.001
+let strangers = 0.01
+let crossOverOffset : Double = 0
+let bestSelected = 8
+let TheorethicalBestFit = 31
+var historicalBestFit = 0
+let crossOverPower : Double = 9
+
+class DNA {
+    var fitness = 0
+    var length = 62
+    var code : [Double]
+
+    init(){
+        self.code = []
+        for _ in 0..<self.length {
+            self.code.append(drand48())
+        }
+    }
+    func mutate(){
+        for i in 0..<self.length {
+            if( drand48() < mutationRate){
+                self.code[i] = drand48();
+            }
+    }
+    
+    }
+};
+var population : [DNA] = []
+var matingPool : [DNA] = []
+
+
+func createPopulation(){
+    for _ in 0..<popSize {
+            population.append(DNA())
+    }
+}
+
+
+func evaluate(){
+        bestFit = ["value" : 0, "index" : 0];
+        leastFit = TheorethicalBestFit;
+        var moyenne = 0;
+        for i in 0..<popSize {
+            population[i].fitness = playArray(arr: population[i].code);
+            moyenne += population[i].fitness/popSize;
+            if(bestFit["value"]! <  population[i].fitness){
+                bestFit["value"] = population[i].fitness;
+                bestFit["index"] = i;
+            }
+            if(leastFit > population[i].fitness){
+                leastFit = population[i].fitness;
+            }
+        }
+        
+        if(bestFit["value"]! > historicalBestFit){
+            historicalBestFit = bestFit["value"]!;
+        }
+        
+        //$('#BestFit').text(this.bestFit.value);
+        //$('#Average').text(Math.floor(moyenne*100)/100);
+        //$('#Historical').text(this.historicalBestFit);
+        
+        playArray(arr: population[bestFit["index"]!].code);
+        
+        
+    }
+
+func createMatingPool(){
+    for i in 0..<popSize {
+        let n = (population[i].fitness-leastFit)/(bestFit["value"]!-leastFit)*100;
+            for _ in 0..<n {
+                matingPool.append(population[i]);
+            }
+    }
+        
+        
+        // Three best
+        /*
+         GA.population.sort(function(a,b){return b.fitness-a.fitness});
+         var n = GA.bestSelected;
+         for(i=0; i<n; i++){
+         for(j=0; j<n-i; j++){
+         GA.matingPool.push(GA.population[i]);
+         }
+         
+         }
+         
+         */
+}
+func crossOver(mother: DNA, father: DNA) -> DNA{
+        let child = DNA();
+        
+        //traditionnal
+        var randomIndex: Int = Int(floor(drand48()*Double(child.length)));
+        
+        //my style
+        let randomNum : Int = Int(floor(pow(drand48(),crossOverPower)*Double(popSize))+crossOverOffset);
+        
+        randomIndex = 2*(mother.fitness-randomNum);
+        
+        
+        for i in 0..<child.length {
+            if(i < randomIndex){
+                child.code[i] = mother.code[i];
+            }else{
+                child.code[i] = father.code[i];
+            }
+        }
+        return child;
+    }
+
+
+func reproduction(){
+    for i in 0..<popSize {
+        if(Double(i) < (1-strangers)*Double(popSize)){
+            let mother = matingPool[Int(floor(drand48()*Double(matingPool.count)))];
+            let father = matingPool[Int(floor(drand48()*Double(matingPool.count)))];
+            
+            let child = crossOver(mother: mother,father: father);
+            child.mutate();
+            
+            population[i] = child;
+        }else {
+            population[i] = DNA();
+        }
+        
+        
+    }
+}
+var gen = 0
+let temp = 0.02
+
+
+class RunTimer {
+    var timer: Timer?
+    func startTimer () {
+        
+            Timer.scheduledTimer(withTimeInterval: temp, repeats: true){timer in
+
+                
+                // Selection
+                evaluate();
+                createMatingPool();
+                
+                // Reproduction
+                reproduction();
+                //$("#Gen").text(gen);
+                gen += 1;
+            
+                
+            
+        }
+    }
+
+    
+}
+
+func algo(){
+        gen = 1
+    
+        // Setup
+        createPopulation();
+        let instanceTime = RunTimer()
+        instanceTime.startTimer()
+        
+
+    
+}
+
 
 
 func initialize() {
     createField()
-    colorise()
+    algo()
 
     
     
