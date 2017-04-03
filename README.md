@@ -11,4 +11,4 @@ The next generation is then created using biological ideas like "mating pool", "
 The following color code is used : A dark-blue cell means an empty one and, on the opposite, light-blue means occupied. A yellow one is a cell that could have made a move but the board was blocked. The red color indicates the starting cell of the last move, and the green color marks where it landed.
 
 
-<img src="https://github.com/ArnaudPannatier/Solitaire-Playground/blob/master/img/capture.png" width="400">
+<img src="https://github.com/ArnaudPannatier/Solitaire-Playground/blob/master/img/capture.png" width="800">
