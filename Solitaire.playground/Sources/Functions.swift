@@ -3,7 +3,60 @@ import PlaygroundSupport
 import Darwin
 import Foundation
 
-public var containerView = UIView(frame: CGRect(x: 0.0, y: 0.0, width: 400, height: 400))
+public var containerView = UIView(frame: CGRect(x: 0.0, y: 0.0, width: 400, height: 600))
+
+public var generationLabel = UILabel(frame: CGRect(x : 20, y : 400, width : 180, height : 30))
+public var bestFitnessLabel = UILabel(frame: CGRect(x : 20, y : 430, width : 180, height : 30))
+public var averageFitnessLabel = UILabel(frame: CGRect(x : 200, y : 400, width : 180, height : 30))
+public var historicalBestFitLabel = UILabel(frame: CGRect(x : 200, y : 430, width : 180, height : 30))
+
+public class sliderWithLabel{
+    var slider : UISlider
+    var label : UILabel
+    var text : String
+    var value : Float
+
+    
+    @objc func changeVal(){
+        self.value = self.slider.value
+        self.label.text = self.text + String(floor(self.slider.value*100)/100)
+        
+    }
+    
+    init(frame: CGRect, labelText: String, initvalue: Float, max: Float, min : Float){
+        self.label = UILabel(frame: frame);
+        self.value = initvalue
+        var framelabel = frame;
+        framelabel.origin.x += 180
+
+        self.slider = UISlider(frame: framelabel);
+        self.slider.isContinuous = true;
+        
+        self.slider.maximumValue = max
+        self.slider.minimumValue = min
+        
+        self.slider.value = initvalue
+        
+        self.text = labelText
+        self.label.text = labelText + String(Int(initvalue))
+        
+        
+        containerView.addSubview(self.slider);
+        containerView.addSubview(self.label);
+        
+        self.slider.addTarget(self, action: #selector(self.changeVal), for: .valueChanged)
+        
+        
+        
+    }
+    init(){
+        self.slider = UISlider()
+        self.label = UILabel()
+        self.text = ""
+        self.value = 100
+    }
+
+}
 
 
 public var ColorField = [
@@ -14,6 +67,10 @@ public var ColorField = [
     "red" : UIColor(red:0.91, green:0.30, blue:0.24, alpha:1.0),
     "yellow" : UIColor(red:0.95, green:0.77, blue:0.06, alpha:1.0)
 ]
+
+public func random0and1() -> Double{
+    return Double(arc4random_uniform(UInt32.max))/Double(UInt32.max)
+}
 
 public class Direction {
     var up: Int?
@@ -83,9 +140,31 @@ public var dotPlay: [Dot] = []
 public var compt = 0
 public var completementBloque = false
 public var numberOfCase = 33
-
+public var popSize = 100
+public var popSlider = sliderWithLabel()
+public var bestFit = ["value" : 0, "index" : 0]
+public var leastFit = 33
+public var mutationRate: Double = 0.01
+public var mutationSlider = sliderWithLabel()
+public var strangers:Double = 0.1
+public var strangerSlider = sliderWithLabel()
+public let crossOverOffset: Double = 4.0
+public let TheorethicalBestFit = 31
+public var historicalBestFit = 0
+public let crossOverPower : Double = 3
 
 public func createField(){
+    containerView.addSubview(generationLabel);
+    containerView.addSubview(averageFitnessLabel);
+    containerView.addSubview(historicalBestFitLabel);
+    containerView.addSubview(bestFitnessLabel);
+    
+    popSlider = sliderWithLabel(frame: CGRect(x : 20, y : 500, width : 180, height : 20), labelText: "Population : " , initvalue: 100, max : 200, min: 20 )
+    
+    mutationSlider = sliderWithLabel(frame: CGRect(x : 20, y : 530, width : 180, height : 20), labelText: "Mutation : " , initvalue: 0.01, max : 1, min: 0 )
+    
+    strangerSlider = sliderWithLabel(frame: CGRect(x : 20, y : 560, width : 180, height : 20), labelText: "Strangers : " , initvalue: 0.1, max : 1, min: 0 )
+    
     let w: CGFloat = containerView.frame.size.width;
     let rdot: CGFloat =  w/15.0;
     let milieuDot: CGFloat = w/2.0;
@@ -261,8 +340,8 @@ public func playArray(arr: [Double]) -> Int{
     colorise();
     
     while(!is_blocked()){
-        let i = Int(floor(arr[2*k]*Double(dotPlay.count)));
-        let j = Int(floor(arr[2*k+1]*Double(dotPlay[i].action.count)));
+        let i = Int(arr[2*k]*Double(dotPlay.count));
+        let j = Int(arr[2*k+1]*Double(dotPlay[i].action.count));
         
         joue_coup(d1: dotPlay[i], dir: dotPlay[i].action[j]);
         k += 1;
@@ -341,18 +420,30 @@ public func test_exist(t : Dot, dir: String) -> Bool {
     
     return false;
 }
+public func actualiseValueFromSlider(){
+    if(Int(popSlider.value) != popSize){
+        
+        var newPop: [DNA] = []
+        for i in 0..<Int(popSlider.value){
+            if(i<popSize){
+                newPop.append(population[i]);
+            }else{
+                newPop.append(DNA());
+            }
 
-public let popSize = 90
-public var bestFit = ["value" : 0, "index" : 0]
-public var leastFit = 33
-public let mutationRate = 0.001
-public let strangers = 0.01
-public let crossOverOffset : Double = 0
-public let bestSelected = 8
-public let TheorethicalBestFit = 31
-public var historicalBestFit = 0
-public let crossOverPower : Double = 9
-
+        }
+        population = newPop
+        popSize = Int(popSlider.value)
+    }
+    if(Double(mutationSlider.value) != mutationRate){
+        mutationRate = Double(mutationSlider.value)
+    }
+    if(Double(strangerSlider.value) != strangers){
+       strangers = Double(strangerSlider.value)
+    }
+    
+    
+}
 public class DNA {
     var fitness = 0
     var length = 62
@@ -361,13 +452,13 @@ public class DNA {
     init(){
         self.code = []
         for _ in 0..<self.length {
-            self.code.append(drand48())
+            self.code.append(random0and1())
         }
     }
     public func mutate(){
         for i in 0..<self.length {
-            if( drand48() < mutationRate){
-                self.code[i] = drand48();
+            if( random0and1() < mutationRate){
+                self.code[i] = random0and1();
             }
         }
         
@@ -385,13 +476,14 @@ public func createPopulation(){
 
 
 public func evaluate(){
+    actualiseValueFromSlider()
     bestFit = ["value" : 0, "index" : 0];
     leastFit = TheorethicalBestFit;
-    var moyenne = 0;
+    var moyenne : Double = 0;
     for i in 0..<popSize {
         population[i].fitness = playArray(arr: population[i].code);
        
-        moyenne += population[i].fitness/popSize;
+        moyenne += Double(population[i].fitness)/Double(popSize);
         if(bestFit["value"]! <  population[i].fitness){
             bestFit["value"] = population[i].fitness;
             bestFit["index"] = i;
@@ -404,49 +496,39 @@ public func evaluate(){
     if(bestFit["value"]! > historicalBestFit){
         historicalBestFit = bestFit["value"]!;
     }
+    bestFitnessLabel.text = "Best Fitness : " + String(bestFit["value"]!)
+    averageFitnessLabel.text = "Average Fitness : " + String((floor(Double(moyenne*100))/100))
+    historicalBestFitLabel.text = "Historical Best Fit : " + String(historicalBestFit)
+  
     
-    //$('#BestFit').text(this.bestFit.value);
-    //$('#Average').text(Math.floor(moyenne*100)/100);
-    //$('#Historical').text(this.historicalBestFit);
-    
-    population[bestFit["index"]!].fitness = playArray(arr: population[bestFit["index"]!].code);
+    _ = playArray(arr: population[bestFit["index"]!].code);
 
     
 }
 
 public func createMatingPool(){
+    matingPool = []
     for i in 0..<popSize {
         if(bestFit["value"]!-leastFit != 0){
             
-            let n = (population[i].fitness-leastFit)/(bestFit["value"]!-leastFit)*100;
+            let n = (population[i].fitness+1-leastFit)/(bestFit["value"]!+1-leastFit)*5;
             for _ in 0..<n {
-                matingPool.append(population[i]);
+                matingPool.append(population[i])
             }
+        }else{
+            matingPool.append(population[i])
         }
     }
-    
-    
-    // Three best
-    /*
-     GA.population.sort(public function(a,b){return b.fitness-a.fitness});
-     var n = GA.bestSelected;
-     for(i=0; i<n; i++){
-     for(j=0; j<n-i; j++){
-     GA.matingPool.push(GA.population[i]);
-     }
-     
-     }
-     
-     */
+
 }
 public func crossOver(mother: DNA, father: DNA) -> DNA{
     let child = DNA();
     
     //traditionnal
-    var randomIndex: Int = Int(floor(drand48()*Double(child.length)));
+    var randomIndex: Int = Int(floor(random0and1()*Double(child.length)));
     
     //my style
-    let randomNum : Int = Int(floor(pow(drand48(),crossOverPower)*Double(popSize))+crossOverOffset);
+    let randomNum : Int = Int(floor(pow(random0and1(),crossOverPower)*Double(popSize))+crossOverOffset);
     
     randomIndex = 2*(mother.fitness-randomNum);
     
@@ -465,12 +547,11 @@ public func crossOver(mother: DNA, father: DNA) -> DNA{
 public func reproduction(){
     for i in 0..<popSize {
         if(Double(i) < (1-strangers)*Double(popSize)){
-            //let k = Int(floor(drand48()*Double(matingPool.count)))
-            //let mother = matingPool[];
-            //let father = matingPool[Int(floor(drand48()*Double(matingPool.count)))];
+            let mother = matingPool[Int(floor(random0and1()*Double(matingPool.count)))];
+            let father = matingPool[Int(floor(random0and1()*Double(matingPool.count)))];
+        
+            let child = crossOver(mother: mother,father: father);
             
-            let child = DNA()
-            //let child = crossOver(mother: mother,father: father);
             child.mutate();
             
             population[i] = child;

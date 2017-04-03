@@ -9,20 +9,31 @@ PlaygroundPage.current.needsIndefiniteExecution = true
 containerView.backgroundColor = ColorField["lightGray"]
 PlaygroundPage.current.liveView = containerView;
 
+
 var gen = 1
 let temp = 0.001
 class RunTimer {
     var timer: Timer?
     func startTimer () {
-            Timer.scheduledTimer(withTimeInterval: temp, repeats: true){timer in
+            timer = Timer.scheduledTimer(withTimeInterval: temp, repeats: true){timer in
                 // Selection
+                
                 evaluate();
                 createMatingPool();
                 // Reproduction
                 reproduction();
-                //$("#Gen").text(gen);
+            
+                generationLabel.text = "Generation : "+String(gen)
                 gen += 1;
+                
+                if(bestFit["value"]! >= TheorethicalBestFit){
+                    self.stopTimer()
+                    print("Solitaire is solved.")
+                }
             }
+    }
+    func stopTimer (){
+        timer?.invalidate()
     }
 }
 
@@ -31,10 +42,6 @@ func algo(){
         createPopulation();
         let instanceTime = RunTimer()
         instanceTime.startTimer()
-    
-
-    //$("#Gen").text(gen);
-    gen += 1;
 }
 
 
