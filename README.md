@@ -1,5 +1,3 @@
-Web App that tries to solve the game of Solitaire
-
 My playground is a program which tries to solve the classic game of Solitaire using a Genetic Algorithm.
 
 The rules of the game are as follows : The game begins with all dots placed on the board except the one in the middle. A move is made by taking a pawn, jumping over one of his neighbours and landing on an empty cell. The purpose is to play until only one pawn is remaining.
